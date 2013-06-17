@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Visual Secrecy</title>
+	<meta charset="utf-8">
+	<script src="lib/crc32.js" type="text/javascript"></script>
+	<script src="lib/q.js" type="text/javascript"></script>
+	<script src="lib/xmlrpc.js" type="text/javascript"></script>
+	<script src="lib/GravatarAPI.js" type="text/javascript"></script>
+	<script src="lib/ImgUtils.js" type="text/javascript"></script>
+	<script src="lib/bitcoinjs-min.js" type="text/javascript"></script>
+	<script src="lib/aes.js" type="text/javascript"></script>
+	<script src="lib/qrcode.js" type="text/javascript"></script>
+	<script src="lib/Emitter.js" type="text/javascript"></script>
+	<script src="lib/grvsec.js" type="text/javascript"></script>
+	<link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+
+	<section id='login'>
+		<p>This page allows you to publish a public key on your gravatar, which lets other people send you bitcoins
+		or encrypt secret messages for you given only your email address or the url to your gravatar.</p>
+		<p>Enter your email address and passphrase:</p>
+		<div><label for='email'>Email:</label><input id='email' tabindex='1' type='text'></div>
+		<div>
+			<label for='passphrase'>Passphrase:</label><input id='passphrase' tabindex="2" type='password'><input id='secretSwitch' type="checkbox" tabindex="4"><span>show</span>
+		</div>
+		<p id='wrongPassphraseMsg'>The passphrase you entered could not decrypt the saved data.  You have probably previously saved data for this email
+		address with a different passphrase. You can delete the currently saved data to start again or type in the old passphrase.</p>
+		<button id='deleteData'>Delete Saved Data</button>
+		<button id='startButton' tabindex="3">Continue</button>
+		<p>
+			Your passphrase will either be used to generate your keys or will be used to keep them secret when they're stored in your browser.
+			It will not be sent to any server.  If you use a brain wallet, you can enter the same passphrase here.
+		</p>
+		<p>
+			Disclaimer: Think of this as a proof of concept intended to spark conversation about how to make cryptography more accessible to the general public.
+			If you have serious needs, this is not for you.
+		</p>
+		<script type="text/javascript">
+			(function() {
+				var e = [
+					'email', 'passphrase', 'secretSwitch', 'startButton',
+					'credentialsForm', 'deleteData', 'wrongPassphraseMsg'
+				].reduce(function(obj, element) { obj[element] = document.getElementById(element); return obj; }, {});
+
+				e.passphrase.onkeydown = function(evt) {
+					evt = evt || event;
+					if (evt.which === 13) {
+						e.startButton.click();
+					}
+				};
+				e.email.onfocus = e.passphrase.onfocus = function() {
+					setTimeout(this.select.bind(this), 0);
+				};
+				e.secretSwitch.onchange = function() {
+					e.passphrase.type = this.checked ? 'text' : 'password';
+				};
+				e.startButton.onclick = function() {
+					app.initialise(e.email.value, e.passphrase.value);
+				};
+				e.deleteData.onclick = function() {
+					if (window.confirm("Are you sure?\nThis will remove any saved key data.  If you don't have a copy of your private key, you will not be able to retrieve it.")) {
+						app.deleteDataFor(e.email.value);
+					}
+				};
+			})();
+		</script>
+	</section>
+
+	<section id='noGravatar'>
+		<p>We were unable to load your gravatar image. Perhaps you haven't set one up yet.  Go to <a target="_blank" href="https://gravatar.com/site/login">the gravatar site</a> to
+		create an account and upload an image.</p>
+		<button id='retryGravatarLoad'>Retry</button>
+		<script type="text/javascript">
+			document.getElementById('retryGravatarLoad').onclick = function() {
+				document.getElementById('noGravatar').style.display = 'none';
+				app.attemptToLoadGravatar();
+			};
+		</script>
+	</section>
+
+	<section id='loadingGravatar'>
+		<p>Loading your gravatar image....</p>
+	</section>
+
+	<section id='myDetails'>
+		<div id='myAvatar'></div>
+		<span id='myEmail'></span>
+		<div class='keysDifferent'>
+			<p>Public Key in Gravatar:</p>
+			<div class='key' id='keyInAvatar'></div>
+		</div>
+		<p>Public Key:</p>
+		<div class='key' id='publicKey'></div>
+		<button class='keysDifferent' onclick='app.upload()'>Upload to Gravatar</button>
+		<p>Bitcoin Address:</p>
+		<div id='myQR'></div>
+		<div class='key' id='bitcoinAddress'></div>
+		<p>Private Key:</p>
+		<div class='key' id='privateKey'>-- click to show private key --</div>
+		<button onclick='app.importKey(prompt("Enter your key in key import format (sometimes called Bitcoin QT format)."));'>Import Key</button>
+		<button onclick='app.randomiseKey();'>Generate Random Key</button>
+		<script>
+			document.getElementById('privateKey').onclick = function() {
+				this.innerHTML = 	app.session.key.getExportedPrivateKey();
+			}
+		</script>
+	</section>
+
+	<section id='party'>
+		<div id='theirAvatar'></div>
+		<div id='theirQR'></div>
+		<input id='theirEmail' value='enter email or gravatar url'>
+		<button onclick='lookupClick();'>Lookup</button>
+		<div class='key' id='theirBitcoinAddress'></div>
+		<div id='loadingPartyMsg'>Attempting to load gravatar data...</div>
+		<div id='partyNoGravatar'>Couldn't find a gravatar for this person. Please ask them to visit <a href='http://gravatar.com' target='_blank'>gravatar.com</a> to get one.</div>
+		<div id='partyNoData'>Couldn't read any data from the users gravatar.  Please ask them to visit this page to generate and save their public key.</div>
+		<div class='partyLoadedItems'>
+			<textarea id='textentry'></textarea>
+			<button onclick='encryptClick();'>Encrypt</button>
+			<button onclick='decryptClick();'>Decrypt</button>
+			<a id='cryptlink'>Send this link to the other party.</a>
+		</div>
+		<script>
+			var theirEmail = document.getElementById('theirEmail');
+			theirEmail.onfocus = theirEmail.onclick = function() {
+				setTimeout(this.select.bind(this), 0);
+			};
+			function lookupClick() {
+				var party = document.getElementById('party');
+				party.className = 'partyLoading';
+				app.setParty(document.getElementById("theirEmail").value);
+			}
+			function encryptClick() {
+				var cryptText = app.encrypt(document.getElementById("textentry").value);
+				document.getElementById("textentry").innerHTML = cryptText
+				var cryptLink = document.getElementById('cryptlink');
+				cryptLink.href = location.origin+location.pathname + "#from="+app.session.email+"&msg="+cryptText;
+				cryptLink.style.display = 'inline-block';
+			}
+			function decryptClick() {
+				document.getElementById("textentry").innerHTML = app.decrypt(document.getElementById("textentry").value);
+			}
+		</script>
+	</section>
+
+<script>
+	function App() {
+		Emitter.call(this);
+		this.grav = null;
+
+		this.gravatarCx = null;
+		this.keyInGravatar = null;
+		this.gravatarDirty = null;
+
+		this.party = null;
+	}
+	App.prototype = Object.create(Emitter.prototype);
+
+	App.prototype.initialise = function(email, passphrase) {
+		localStorage.setItem('lastUser', email);
+
+		this.session;
+		try {
+			this.session = new Session(email, passphrase);
+		} catch (e) {
+			this.emit('wrongPassphrase');
+			return false;
+		}
+
+		this.session.forward(this);
+
+		this.grav = getGrav(email);
+		this.grav.passwordProvider = function() {
+			return prompt("Please Enter Gravatar Password.\n" +
+					"This is needed to upload the new gravatar image with the public key embedded in it.\n" +
+					"This password is not stored persistently, but it is sent via a proxy (gravatar don't add CORS headers to their API).\n" +
+					"If you are uncomfortable with this, cancel, then right click on the image in the top left, save it and then manually upload it.");
+		};
+
+		this.attemptToLoadGravatar();
+
+		this.emit('initialised');
+		this.emit('keyChanged');
+		return true;
+	};
+
+	App.prototype.attemptToLoadGravatar = function() {
+		ImgUtils.loadImg(this.grav.imgUrl+"?d=404&cachebuster="+Date.now())
+				.then(ImgUtils.loadedImgToContext)
+				.then(function(g) {
+			this.gravatarCx = g;
+			this.emit('gravatarLoaded');
+			this.checkForKeyInGravatar();
+		}.bind(this), function() {
+			this.emit('noGravatar');
+		}.bind(this));
+	};
+
+	App.prototype.generateQRCodeImgTag = function(bitcoinAddress) {
+		var qrCode = qrcode(3, 'M');
+		bitcoinAddress = bitcoinAddress.replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
+		qrCode.addData(bitcoinAddress);
+		qrCode.make();
+		return qrCode.createImgTag(4);
+	};
+
+	App.prototype.deleteDataFor = function(email) {
+		localStorage.removeItem(email);
+	};
+
+	App.prototype.checkForKeyInGravatar = function() {
+		var g = this.gravatarCx;
+		if (ImgUtils.checkContextForHeader(g)) {
+			this.keyInGravatar = ImgUtils.readBytesFromContext(g);
+			this.emit('gravatarHasPublicKey', true);
+		} else {
+			this.emit('gravatarHasPublicKey', false);
+		}
+		this.revalidateGravatar();
+	};
+
+	App.prototype.revalidateGravatar = function() {
+		var actualPub = this.session.key.getPub();
+		var match = this.keyInGravatar != null && this.keyInGravatar.length === actualPub.length;
+		for (var i = 0; match && i < actualPub.length; ++i) {
+			match = this.keyInGravatar[i] === actualPub[i];
+		}
+		var dirty = !match;
+		if (this.gravatarDirty != dirty) {
+			this.gravatarDirty = dirty;
+			this.emit('gravatarMatchesPublicKey', dirty);
+		}
+	};
+
+	App.prototype.randomiseKey = function() {
+		this.gravatarDirty = true;
+		this.session.useRandomKey();
+		this.revalidateGravatar();
+	};
+
+	App.prototype.importKey = function(newKey) {
+		this.session.importPrivateKey(newKey);
+		this.revalidateGravatar();
+	};
+
+	App.prototype.upload = function() {
+		ImgUtils.writeBytesToContext(this.session.key.getPub(), this.gravatarCx);
+		this.grav.upload(this.gravatarCx.canvas)
+				.then(this.grav.useImgForPrimary)
+				.then(this.checkForKeyInGravatar.bind(this));
+	};
+
+	App.prototype.setParty = function(userIdentifier) {
+		this.session.getGravatarParty(userIdentifier).then(function (party) {
+			this.party = party;
+			this.emit('setParty', party);
+		}.bind(this),
+		function(failreason) {
+			this.emit('badPartyGravatar', failreason);
+		}.bind(this));
+	};
+
+	App.prototype.encrypt = function(plainText) {
+		return this.session.encrypt(this.party, plainText);
+	};
+
+	App.prototype.decrypt = function(cryptText) {
+		return this.session.decrypt(this.party, cryptText);
+	};
+
+	function readHash() {
+		var linkData = window.location.hash.substring(1).split("&").reduce(function(accumulator, item) {
+			var itemData = item.match(/([^=]+)=(.*)/);
+			if (itemData) {
+				accumulator[itemData[1]] = itemData[2];
+			} else {
+				accumulator[item] = true;
+			}
+			return accumulator;
+		}, {});
+
+		if (linkData.msg) {
+			document.getElementById('textentry').innerHTML = linkData.msg;
+		}
+		if (linkData.from) {
+			document.getElementById('theirEmail').value = linkData.from;
+			lookupClick();
+		}
+	}
+
+	var app = new App();
+
+	app.on('gravatarLoaded', function() {
+		document.getElementById('myAvatar').appendChild(app.gravatarCx.canvas);
+		document.getElementById('myDetails').style.display = 'block';
+		document.getElementById('loadingGravatar').style.display = 'none';
+		document.getElementById('party').style.display = 'block';
+		readHash();
+	});
+
+	app.on('initialised', function() {
+		document.getElementById('myEmail').innerHTML = app.session.email;
+		document.getElementById('login').style.display = 'none';
+		document.getElementById('loadingGravatar').style.display = 'block';
+	});
+
+	app.on('keyChanged', function() {
+		document.getElementById('publicKey').innerHTML = Crypto.util.bytesToHex(app.session.key.getPub());
+		var bitcoinAddress = app.session.key.getBitcoinAddress();
+		document.getElementById('bitcoinAddress').innerHTML = bitcoinAddress;
+		document.getElementById('myQR').innerHTML = "<a target='_blank' href='https://blockchain.info/address/"+bitcoinAddress+"'>"+app.generateQRCodeImgTag(bitcoinAddress.toString())+"</a>";
+		if (app.gravatarDirty) {
+			document.getElementById('myDetails').className = 'gravatarDirty';
+		}
+	});
+
+	app.on('noGravatar', function() {
+		document.getElementById('noGravatar').style.display = 'block';
+		document.getElementById('loadingGravatar').style.display = 'none';
+	});
+
+	app.on('gravatarHasPublicKey', function(hasKey) {
+		if (hasKey) {
+			document.getElementById('keyInAvatar').innerHTML = Crypto.util.bytesToHex(app.keyInGravatar);
+		} else {
+			document.getElementById('keyInAvatar').innerHTML = "no key";
+		}
+	});
+
+	app.on('gravatarMatchesPublicKey', function() {
+		document.getElementById('myDetails').className = app.gravatarDirty ? 'gravatarDirty' : 'gravatarClean';
+	});
+
+	app.on('setParty', function(party) {
+		var partyNode = document.getElementById('party');
+		partyNode.className = 'partyLoaded';
+		var avatar = document.getElementById('theirAvatar');
+		while (avatar.firstChild) {
+			avatar.removeChild(avatar.firstChild);
+		}
+		avatar.appendChild(party.img);
+		document.getElementById('theirBitcoinAddress').innerHTML = party.bitcoinAddress;
+		document.getElementById('theirQR').innerHTML = "<a target='_blank' href='https://blockchain.info/address/"+party.bitcoinAddress+"'>"+app.generateQRCodeImgTag(party.bitcoinAddress.toString())+"</a>";
+
+		if (document.getElementById('textentry').innerHTML != '') {
+			var decrypted = app.decrypt(document.getElementById("textentry").value);
+			if (decrypted != '') {
+				document.getElementById('textentry').innerHTML = decrypted;
+			}
+		}
+	});
+
+	app.on('badPartyGravatar', function(reason) {
+		var party = document.getElementById('party');
+		if (reason === Session.GRAVATAR_HAS_NO_VALID_DATA) {
+			party.className = 'noData';
+		} else {
+			party.className = 'noGravatar';
+		}
+	});
+
+	app.on('wrongPassphrase', function() {
+		var msg = document.getElementById('wrongPassphraseMsg');
+		msg.style.display = 'block';
+		msg.style.backgroundColor = 'red';
+		setTimeout(function() {
+			msg.style.backgroundColor = 'black';
+		}, 100);
+		document.getElementById('deleteData').style.display = 'inline';
+		var passphrase = document.getElementById('passphrase');
+		passphrase.select();
+		passphrase.focus();
+	});
+
+	window.onhashchange = function() {
+		readHash();
+	};
+
+	var lastUser = localStorage.getItem('lastUser');
+	if (lastUser != null) {
+		document.getElementById('email').value = lastUser;
+		document.getElementById('passphrase').focus();
+	}
+
+</script>
+</body>
+</html>

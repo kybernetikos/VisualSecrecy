@@ -1,0 +1,238 @@
+body {
+	background-color: black;
+	font-family: sans-serif;
+	color: #ccc;
+}
+
+section {
+	margin:  0px auto;
+	border: 1px solid black;
+	padding: 10px;
+	position: relative;
+}
+
+/* login section ---------------------------------- */
+
+#login {
+	border: 4px solid #808080;
+	border-radius: 10px;
+	padding-bottom: 25px;
+}
+
+#login p {
+	font-size: medium;
+}
+
+#login input {
+	width: 500px;
+}
+#login #secretSwitch {
+	width: 20px;
+}
+#login label {
+	font-size: x-large;
+	color: white;
+	width: 180px;
+	display: inline-block;
+}
+
+#login button {
+	position: absolute;
+	right: 15px;
+	bottom: 10px;
+}
+
+#login #deleteData {
+	display: none;
+	position: absolute;
+	bottom: 10px;
+	right: 100px;
+}
+
+#wrongPassphraseMsg {
+	display: none;
+	color: #f11;
+}
+
+/* ------------------------------------------------ */
+
+a, a:visited, a:active {
+	color: #bbf;
+	display: inline-block;
+	text-decoration: none;
+}
+
+p a {
+	border-bottom: 1px dotted;
+}
+
+#cryptlink {
+	color: #96C;
+	display: inline-block;
+	text-decoration: none;
+	border-bottom: 1px dotted;
+}
+
+#noGravatar, #loadingGravatar {
+	display: none;
+	border: 4px solid #808080;
+	border-radius: 10px;
+}
+
+/* ------------------------------------------------ */
+
+#myDetails {
+	display: none;
+	width: 250px;
+	position: absolute;
+	left: 10px;
+	top: 10px;
+}
+
+#bitcoinAddress {
+	text-align: center;
+}
+
+#myQR {
+	text-align: center;
+}
+
+.key {
+	width: 250px;
+	word-break: break-all;
+	font-size: xx-small;
+}
+
+#myDetails button {
+	display: inline-block;
+	float: right;
+	margin-bottom: 10px;
+}
+
+#myDetails p {
+	clear: both;
+	margin-bottom: 4px;
+}
+
+#myDetails input {
+	left: 0px;
+	right: 4px;
+}
+
+#myDetails span {
+	display: inline-block;
+	text-align: center;
+	width: 100%;
+}
+
+#myAvatar {
+	width: 160px;
+	height: 160px;
+	margin: auto;
+}
+#myAvatar canvas {
+	width: 160px;
+	height: 160px;
+}
+
+#myEmail {
+	font-size: large;
+}
+
+.gravatarDirty #keyInAvatar {
+	color: red;
+}
+
+#myDetails.gravatarClean .keysDifferent {
+	display: none;
+}
+
+/* ------------------------------------------------ */
+
+#party {
+	border: 4px solid #808080;
+	border-radius: 10px;
+	position: absolute;
+	left: 290px;
+	right: 20px;
+	overflow: hidden;
+	display: none;
+}
+
+#loadingPartyMsg, #partyNoData, #partyNoGravatar {
+	display: none;
+	clear: both;
+	text-align: center;
+}
+
+#party.noData #partyNoData {
+	display: block;
+}
+
+#party.partyLoading #loadingPartyMsg {
+	display: block;
+}
+
+#party.noGravatar #partyNoGravatar {
+	display: block;
+}
+
+.partyLoadedItems {
+	display: none;
+}
+
+#party.partyLoaded .partyLoadedItems {
+	display: block;
+}
+
+#theirAvatar, #theirQR, #theirBitcoinAddress {
+	visibility: hidden;
+}
+
+#party.partyLoaded #theirAvatar, #party.partyLoaded #theirQR, #party.partyLoaded #theirBitcoinAddress {
+	visibility: visible;
+}
+
+input {
+	color: white;
+	padding: 2px 2px 1px 6px;
+	display: inline-block;
+	background-color: #678;
+	font-size: x-large;
+	border: none;
+	border-radius: 3px;
+	margin-top: 4px;
+}
+
+button {
+	display: inline-block;
+	font-size: medium;
+	border: 2px outset #89a;
+	background-color: #def;
+}
+
+#theirAvatar, #theirQR, #party img {
+	width: 80px;
+	height: 80px;
+	float: left;
+}
+#theirBitcoinAddress {
+	float: left;
+	margin: 5px 5px 5px 10px;
+	font-size: medium;
+	width: 400px;
+}
+#theirEmail {
+	margin: 5px 5px 5px 10px;
+	width: 400px;
+}
+
+#textentry {
+	width: 100%;
+	margin-top: 10px;
+	height: 400px;
+}
+
+#cryptlink {
+	display: none;
+}
