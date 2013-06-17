@@ -259,7 +259,14 @@
 		ImgUtils.writeBytesToContext(this.session.key.getPub(), this.gravatarCx);
 		this.grav.upload(this.gravatarCx.canvas)
 				.then(this.grav.useImgForPrimary)
-				.then(this.checkForKeyInGravatar.bind(this));
+				.then(this.checkForKeyInGravatar.bind(this)
+				.then(function() {
+					alert('Gravatar upload succeeded.');
+				}),
+				function() {
+					alert('Upload to gravatar failed.\nDid you enter the correct password?\n' +
+							'You can also upload manually by right clicking and saving the image on the upper left and uploading that to Gravatar.');
+				});
 	};
 
 	App.prototype.setParty = function(userIdentifier) {
