@@ -5,7 +5,7 @@ body {
 }
 
 section {
-	margin:  0px auto;
+	margin:  0 auto;
 	border: 1px solid black;
 	padding: 10px;
 	position: relative;
@@ -115,7 +115,7 @@ p a {
 }
 
 #myDetails input {
-	left: 0px;
+	left: 0;
 	right: 4px;
 }
 
@@ -148,6 +148,25 @@ p a {
 }
 
 /* ------------------------------------------------ */
+
+#gravatarDoesNotMatch {
+	border: 4px solid #808080;
+	border-radius: 10px;
+	position: absolute;
+	left: 290px;
+	right: 20px;
+	overflow: hidden;
+	display: none;
+	margin-bottom: 10px;
+}
+
+#gravatarDoesNotMatch.gravatarDirty {
+	display: block;
+}
+
+#party.gravatarDirty {
+	display: none;
+}
 
 #party {
 	border: 4px solid #808080;

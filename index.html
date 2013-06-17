@@ -80,6 +80,17 @@
 		</script>
 	</section>
 
+	<section id='gravatarDoesNotMatch'>
+		<p>Your gravatar does not contain the correct details required for people to send you bitcoins or secret messages.</p>
+		<p>Click 'Upload to Gravatar' to put the current details into your gravatar (overwriting any details that are currently there).</p>
+		<p>If you want to associate a bitcoin address that you already have with your gravatar,
+			click 'Import Key' first, and paste in your Private Key in Wallet Import Format (it will start with a 5).</p>
+		<p>If you want to use a different bitcoin address and key to what is currently displayed, you can also click
+			to generate a random key.</p>
+		<p>Once you are happy with your key and address, you should click the Upload button, but you should also make
+			a copy of your private key.  Otherwise, if you overwrite it by accident there is no way to retrieve it.</p>
+	</section>
+
 	<section id='loadingGravatar'>
 		<p>Loading your gravatar image....</p>
 	</section>
@@ -135,7 +146,7 @@
 			}
 			function encryptClick() {
 				var cryptText = app.encrypt(document.getElementById("textentry").value);
-				document.getElementById("textentry").innerHTML = cryptText
+				document.getElementById("textentry").innerHTML = cryptText;
 				var cryptLink = document.getElementById('cryptlink');
 				cryptLink.href = location.origin+location.pathname + "#from="+app.session.email+"&msg="+cryptText;
 				cryptLink.style.display = 'inline-block';
@@ -161,8 +172,6 @@
 
 	App.prototype.initialise = function(email, passphrase) {
 		localStorage.setItem('lastUser', email);
-
-		this.session;
 		try {
 			this.session = new Session(email, passphrase);
 		} catch (e) {
@@ -297,7 +306,6 @@
 		document.getElementById('myAvatar').appendChild(app.gravatarCx.canvas);
 		document.getElementById('myDetails').style.display = 'block';
 		document.getElementById('loadingGravatar').style.display = 'none';
-		document.getElementById('party').style.display = 'block';
 		readHash();
 	});
 
@@ -332,6 +340,8 @@
 
 	app.on('gravatarMatchesPublicKey', function() {
 		document.getElementById('myDetails').className = app.gravatarDirty ? 'gravatarDirty' : 'gravatarClean';
+		document.getElementById('party').style.display = app.gravatarDirty ? 'none' : 'block';
+		document.getElementById('gravatarDoesNotMatch').style.display = app.gravatarDirty ? 'block' : 'none';
 	});
 
 	app.on('setParty', function(party) {
