@@ -310,7 +310,13 @@
 	var app = new App();
 
 	app.on('gravatarLoaded', function() {
-		document.getElementById('myAvatar').appendChild(app.gravatarCx.canvas);
+		var link = document.createElement('a');
+		link.onmousedown = function() {
+			link.href = app.gravatarCx.canvas.toDataURL('image/png');
+		}
+		link.target="_blank";
+		link.appendChild(app.gravatarCx.canvas);
+		document.getElementById('myAvatar').appendChild(link);
 		document.getElementById('myDetails').style.display = 'block';
 		document.getElementById('loadingGravatar').style.display = 'none';
 		readHash();
