@@ -132,7 +132,7 @@
 			<textarea id='textentry'></textarea>
 			<button onclick='encryptClick();'>Encrypt</button>
 			<button onclick='decryptClick();'>Decrypt</button>
-			Here is a link that the other party can visit to see your message: <a id='cryptlink'>link for other party</a>. It will only work for them.
+			<div id='crytlinkdiv'>Here is a link that the other party can visit to see your message: <a id='cryptlink'>link for other party</a>. It will only work for them.</div>
 		</div>
 		<script>
 			var theirEmail = document.getElementById('theirEmail');
@@ -149,7 +149,7 @@
 				document.getElementById("textentry").value = cryptText;
 				var cryptLink = document.getElementById('cryptlink');
 				cryptLink.href = location.origin+location.pathname + "#from="+app.session.email+"&msg="+cryptText;
-				cryptLink.style.display = 'inline-block';
+				document.getElementById('crytlinkdiv').style.display = 'inline-block';
 			}
 			function decryptClick() {
 				document.getElementById("textentry").value = app.decrypt(document.getElementById("textentry").value);

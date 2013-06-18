@@ -212,6 +212,10 @@ p a {
 	visibility: visible;
 }
 
+#crytlinkdiv {
+	display: none;
+}
+
 input {
 	color: white;
 	padding: 2px 2px 1px 6px;
@@ -252,6 +256,7 @@ button {
 	height: 400px;
 }
 
-#cryptlink {
+#crytlinkdiv {
+	margin-top: 5px;
 	display: none;
 }
