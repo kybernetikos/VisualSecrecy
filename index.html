@@ -146,13 +146,13 @@
 			}
 			function encryptClick() {
 				var cryptText = app.encrypt(document.getElementById("textentry").value);
-				document.getElementById("textentry").innerHTML = cryptText;
+				document.getElementById("textentry").value = cryptText;
 				var cryptLink = document.getElementById('cryptlink');
 				cryptLink.href = location.origin+location.pathname + "#from="+app.session.email+"&msg="+cryptText;
 				cryptLink.style.display = 'inline-block';
 			}
 			function decryptClick() {
-				document.getElementById("textentry").innerHTML = app.decrypt(document.getElementById("textentry").value);
+				document.getElementById("textentry").value = app.decrypt(document.getElementById("textentry").value);
 			}
 		</script>
 	</section>
