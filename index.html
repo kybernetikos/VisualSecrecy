@@ -37,6 +37,22 @@
 			Disclaimer: Think of this as a proof of concept intended to spark conversation about how to make cryptography more accessible to the general public.
 			If you have serious needs, this is not for you.
 		</p>
+		<p>Things that this page does:
+		<ol><li>
+			Generates a public/private key pair from your passphrase.
+		</li><li>
+			If you don't want a key based on your passphrase, or already have one (e.g. from a bitcoin address elsewhere) you can import that key instead.
+		</li><li>
+			Loads your gravatar and writes your public key into it, then tries to upload it back to gravatar.
+		</li><li>
+			Lets you look up someone elses gravatar, and if it has a public key in it, shows the corresponding
+			bitcoin address and lets you encrypt a message for them.
+		</li><li>
+			Lets you decrypt a message from a particular individual if they have a public key in their gravatar.
+		</li><li>
+			When encrypting, creates a link that you can send to the other person so they can easily see your message.
+		</li></ol>
+		</p>
 		<script type="text/javascript">
 			(function() {
 				var e = [
@@ -73,8 +89,10 @@
 		create an account and upload an image.</p>
 		<button id='retryGravatarLoad'>Retry</button>
 		<script type="text/javascript">
-			document.getElementById('retryGravatarLoad').onclick = function() {
-				document.getElementById('noGravatar').style.display = 'none';
+			var retryGravatarLoad = document.getElementById('retryGravatarLoad');
+			retryGravatarLoad.onclick = function() {
+				var noGravatar = document.getElementById('noGravatar');
+				noGravatar.style.display = 'none';
 				app.attemptToLoadGravatar();
 			};
 		</script>
@@ -113,9 +131,10 @@
 		<button onclick='app.importKey(prompt("Enter your key in key import format (sometimes called Bitcoin QT format)."));'>Import Key</button>
 		<button onclick='app.randomiseKey();'>Generate Random Key</button>
 		<script>
-			document.getElementById('privateKey').onclick = function() {
+			var privateKeyElement = document.getElementById('privateKey');
+			privateKeyElement.onclick = function() {
 				this.innerHTML = 	app.session.key.getExportedPrivateKey();
-			}
+			};
 		</script>
 	</section>
 
