@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html manifest="cache.manifest">
 <head>
 	<title>Visual Secrecy</title>
 	<meta charset="utf-8">
@@ -33,17 +33,19 @@
 			Your passphrase will either be used to generate your keys or will be used to keep them secret when they're stored in your browser.
 			It will not be sent to any server.  If you use a brain wallet, you can enter the same passphrase here.
 		</p>
-		<p>
-			Disclaimer: Think of this as a proof of concept intended to spark conversation about how to make cryptography more accessible to the general public.
-			If you have serious needs, this is not for you.
-		</p>
 		<p>Things that this page does:
 		<ol><li>
-			Generates a public/private key pair from your passphrase of the same sort used by bitcoin.
+			Generates a public/private key pair from your passphrase of the same sort used by bitcoin
+			(which means this is also generating a bitcoin address you can receive money on, although you'll
+			have to export the private key from this to another program/service to actually spend any bitcoins
+			you receive).
 		</li><li>
-			If you don't want a key based on your passphrase, or already have one (e.g. from a bitcoin address elsewhere) you can import that key instead, or even choose a random one.
+			If you don't want a key based on your passphrase, or already have one (e.g. from a bitcoin address
+			elsewhere) you can import that key instead, or even choose a random one.
 		</li><li>
-			Loads your gravatar and writes your public key into it, then tries to upload it back to gravatar.
+			Loads your gravatar and writes your public key into it, then lets you upload it back to gravatar.
+			This is the only stage where information (other than page and image requests) is sent to a server,
+			and you can skip it and do it manually if you prefer.
 		</li><li>
 			Lets you look up someone elses gravatar, and if it has a public key in it, shows the corresponding
 			bitcoin address and lets you encrypt a message for them.
@@ -52,6 +54,10 @@
 		</li><li>
 			When encrypting, creates a link that you can send to the other person so they can easily see your message.
 		</li></ol>
+		</p>
+		<p>
+			Disclaimer: Think of this as a proof of concept hoped to spark conversation about how to make cryptography
+			more accessible to the general public.	If you have serious needs, this is not for you.
 		</p>
 		<script type="text/javascript">
 			(function() {
